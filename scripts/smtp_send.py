@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+import os
+import smtplib
+import ssl
+import sys
+
+
+def env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(f"Missing env: {name}")
+    return value
+
+
+def main() -> int:
+    raw = sys.stdin.buffer.read()
+
+    host = env("DST_SMTP_HOST")
+    port = int(env("DST_SMTP_PORT"))
+    user = env("DST_SMTP_USER")
+    password = env("DST_SMTP_PASS")
+
+    starttls = os.environ.get("DST_SMTP_STARTTLS", "true").lower() in ("true", "1", "yes")
+
+    # Envelope sender/recipient:
+    # Keep a stable envelope sender (the Gmail account) to avoid rejections.
+    mail_from = user
+    rcpt_to = [user]  # Deliver into the target Gmail mailbox.
+
+    if starttls:
+        with smtplib.SMTP(host, port, timeout=60) as client:
+            client.ehlo()
+            client.starttls(context=ssl.create_default_context())
+            client.ehlo()
+            client.login(user, password)
+            client.sendmail(mail_from, rcpt_to, raw)
+    else:
+        # For completeness; Gmail normally uses STARTTLS on port 587.
+        with smtplib.SMTP_SSL(host, port, timeout=60, context=ssl.create_default_context()) as client:
+            client.login(user, password)
+            client.sendmail(mail_from, rcpt_to, raw)
+
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except Exception as exc:
+        sys.stderr.write(f"{exc}\n")
+        raise SystemExit(2)

@@ -11,6 +11,13 @@ Goal: when a message arrives in the old mailbox, the container forwards it to Gm
 3. With `DELETE_AFTER_DELIVERY=true`, successfully delivered messages are deleted from the source mailbox.
 4. If delivery fails, the message stays in the source mailbox and is retried in the next polling cycle.
 
+## Project layout
+
+- `entrypoint.sh`: runtime orchestration, env validation, and polling loop.
+- `scripts/lib.sh`: shared shell helpers.
+- `scripts/render_getmailrc.sh`: renders runtime `getmailrc`.
+- `scripts/smtp_send.py`: SMTP delivery command used by `getmail`.
+
 ## Required variables
 
 - `SRC_HOST`: source host.

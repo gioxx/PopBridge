@@ -13,7 +13,8 @@ RUN adduser -D -H -u 10001 app \
     && chown -R app:app /etc/forwarder /var/lib/forwarder /var/log/forwarder
 
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY scripts /scripts
+RUN chmod +x /entrypoint.sh /scripts/render_getmailrc.sh /scripts/smtp_send.py
 
 USER app
 
