@@ -92,6 +92,24 @@ log_event() {
   printf '%s %s\n' "$ts" "$msg" | tee -a "$RUNNER_LOG"
 }
 
+extract_getmail_summary() {
+  run_file="$1"
+  grep -Eo '[0-9]+ messages? \([0-9]+ bytes\) retrieved, [0-9]+ skipped' "$run_file" | tail -n 1 || true
+}
+
+extract_getmail_error() {
+  run_file="$1"
+  # Prefer the most actionable line if present.
+  err_line="$(grep -Ei 'Delivery error|authentication failed|timed out|network unreachable|certificate verify failed' "$run_file" | tail -n 1 || true)"
+  if [ -n "$err_line" ]; then
+    printf '%s\n' "$err_line"
+    return 0
+  fi
+
+  # Fallback to last lines compacted into one line.
+  tail -n 5 "$run_file" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g' | sed 's/ *$//'
+}
+
 log_event "startup: state_file=${STATE_FILE}"
 if [ -f "$STATE_FILE" ]; then
   log_event "startup: existing state detected, bridge mode resumes from known UIDLs"
@@ -118,15 +136,25 @@ while true; do
   # If it fails, we log and retry next cycle.
   # Messages remain on source if delivery failed; with delete=true, successful delivery removes from source.
   RUN_OUTPUT_FILE="$(mktemp)"
+  RUN_SUMMARY=""
   if getmail --getmaildir "$GETMAIL_DIR" --rcfile "$RC_FILE" >"$RUN_OUTPUT_FILE" 2>&1; then
     cat "$RUN_OUTPUT_FILE" >>"$GETMAIL_RUN_LOG"
-    log_event "getmail run OK"
+    RUN_SUMMARY="$(extract_getmail_summary "$RUN_OUTPUT_FILE")"
+    if [ -n "$RUN_SUMMARY" ]; then
+      log_event "getmail run OK: ${RUN_SUMMARY}"
+    else
+      log_event "getmail run OK"
+    fi
   else
     cat "$RUN_OUTPUT_FILE" >>"$GETMAIL_RUN_LOG"
     if grep -Eiq 'no new messages|no messages \([0-9]+\)|no messages$' "$RUN_OUTPUT_FILE"; then
       log_event "getmail run OK (no new messages)"
     else
-      FAILURE_SUMMARY="$(tail -n 5 "$RUN_OUTPUT_FILE" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g' | sed 's/ *$//')"
+      RUN_SUMMARY="$(extract_getmail_summary "$RUN_OUTPUT_FILE")"
+      FAILURE_SUMMARY="$(extract_getmail_error "$RUN_OUTPUT_FILE")"
+      if [ -n "$RUN_SUMMARY" ]; then
+        log_event "getmail run context: ${RUN_SUMMARY}"
+      fi
       if [ -n "$FAILURE_SUMMARY" ]; then
         log_event "getmail run failed (will retry): ${FAILURE_SUMMARY}"
       else
