@@ -47,6 +47,7 @@ Required variables can be passed as environment variables or as files in `/run/s
 - `SRC_SSL`: `true` (default) or `false`.
 - `SRC_STARTTLS`: `false` (default) or `true` (not compatible with `SRC_SSL=true`).
 - `DST_SMTP_STARTTLS`: `true` (default) or `false`.
+- `DST_SMTP_TLS_VERIFY`: `true` (default) or `false`. Set to `false` only for temporary troubleshooting when the SMTP certificate/hostname chain is broken.
 - `DST_RCPT_TO`: recipient address(es) for forwarded messages. Default is `DST_SMTP_USER`. Multiple recipients are supported as comma-separated values.
 - `DELETE_AFTER_DELIVERY`: `true` (default) or `false`.
 - `POLL_SECONDS`: polling interval in seconds (default `120`).
@@ -88,6 +89,7 @@ docker run -d --name popbridge-pop3 \
   -e DST_SMTP_PASS='gmail-app-password' \
   -e DST_RCPT_TO=your.account@gmail.com \
   -e DST_SMTP_STARTTLS=true \
+  -e DST_SMTP_TLS_VERIFY=true \
   -e DELETE_AFTER_DELIVERY=true \
   -e POLL_SECONDS=120 \
   -v popbridge-state:/var/lib/forwarder \
@@ -110,5 +112,6 @@ docker logs -f popbridge-pop3
 ## Operational notes
 
 - For Gmail, you will usually need an app password on the destination account.
+- Keep `DST_SMTP_TLS_VERIFY=true` in production; disabling TLS verification is insecure and should only be used for short-lived diagnostics.
 - Keep state/log volumes persistent to avoid duplicates after restart.
 - For a dry-run phase without deletion from source, set `DELETE_AFTER_DELIVERY=false`.

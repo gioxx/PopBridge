@@ -25,6 +25,7 @@ ENV STATE_DIR=/var/lib/forwarder \
     DELETE_AFTER_DELIVERY=true \
     SRC_SSL=true \
     SRC_STARTTLS=false \
-    DST_SMTP_STARTTLS=true
+    DST_SMTP_STARTTLS=true \
+    DST_SMTP_TLS_VERIFY=true
 
 ENTRYPOINT ["/entrypoint.sh"]

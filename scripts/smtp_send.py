@@ -12,6 +12,11 @@ def env(name: str) -> str:
     return value
 
 
+def as_bool(name: str, default: str) -> bool:
+    value = os.environ.get(name, default).strip().lower()
+    return value in ("true", "1", "yes")
+
+
 def main() -> int:
     raw = sys.stdin.buffer.read()
 
@@ -21,7 +26,13 @@ def main() -> int:
     password = env("DST_SMTP_PASS")
     rcpt_to_raw = os.environ.get("DST_RCPT_TO") or user
 
-    starttls = os.environ.get("DST_SMTP_STARTTLS", "true").lower() in ("true", "1", "yes")
+    starttls = as_bool("DST_SMTP_STARTTLS", "true")
+    tls_verify = as_bool("DST_SMTP_TLS_VERIFY", "true")
+
+    tls_context = ssl.create_default_context()
+    if not tls_verify:
+        tls_context.check_hostname = False
+        tls_context.verify_mode = ssl.CERT_NONE
 
     # Envelope sender/recipient:
     # Keep a stable envelope sender (SMTP auth identity) to avoid rejections.
@@ -33,13 +44,13 @@ def main() -> int:
     if starttls:
         with smtplib.SMTP(host, port, timeout=60) as client:
             client.ehlo()
-            client.starttls(context=ssl.create_default_context())
+            client.starttls(context=tls_context)
             client.ehlo()
             client.login(user, password)
             client.sendmail(mail_from, rcpt_to, raw)
     else:
         # For completeness; Gmail normally uses STARTTLS on port 587.
-        with smtplib.SMTP_SSL(host, port, timeout=60, context=ssl.create_default_context()) as client:
+        with smtplib.SMTP_SSL(host, port, timeout=60, context=tls_context) as client:
             client.login(user, password)
             client.sendmail(mail_from, rcpt_to, raw)
 
