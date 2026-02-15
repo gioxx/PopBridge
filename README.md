@@ -49,6 +49,7 @@ Required variables can be passed as environment variables or as files in `/run/s
 - `DST_SMTP_STARTTLS`: `true` (default) or `false`.
 - `DST_SMTP_TLS_VERIFY`: `true` (default) or `false`. Set to `false` only for temporary troubleshooting when the SMTP certificate/hostname chain is broken.
 - `DST_RCPT_TO`: recipient address(es) for forwarded messages. Default is `DST_SMTP_USER`. Multiple recipients are supported as comma-separated values.
+- `DST_FORCE_FROM`: optional sender address override for message headers. Useful for providers (for example Brevo) that require a verified sender. When set, the original `From` is preserved in `X-Original-From` and used as `Reply-To` if missing.
 - `DELETE_AFTER_DELIVERY`: `true` (default) or `false`.
 - `POLL_SECONDS`: polling interval in seconds (default `120`).
 - `BACKLOG_LOG_EVERY`: emit source backlog progress every N cycles (default `10`, set `0` to disable).
@@ -88,6 +89,7 @@ docker run -d --name popbridge-pop3 \
   -e DST_SMTP_USER=your.account@gmail.com \
   -e DST_SMTP_PASS='gmail-app-password' \
   -e DST_RCPT_TO=your.account@gmail.com \
+  -e DST_FORCE_FROM=hello@cerbero.cc \
   -e DST_SMTP_STARTTLS=true \
   -e DST_SMTP_TLS_VERIFY=true \
   -e DELETE_AFTER_DELIVERY=true \
@@ -112,6 +114,7 @@ docker logs -f popbridge-pop3
 ## Operational notes
 
 - For Gmail, you will usually need an app password on the destination account.
+- If your SMTP provider enforces validated senders/domains (for example Brevo), set `DST_FORCE_FROM` to an approved sender identity.
 - Keep `DST_SMTP_TLS_VERIFY=true` in production; disabling TLS verification is insecure and should only be used for short-lived diagnostics.
 - Keep state/log volumes persistent to avoid duplicates after restart.
 - For a dry-run phase without deletion from source, set `DELETE_AFTER_DELIVERY=false`.
