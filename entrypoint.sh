@@ -81,7 +81,10 @@ RUNNER_LOG="${LOG_DIR}/runner.log"
 GETMAIL_RUN_LOG="${LOG_DIR}/getmail-run.log"
 STATE_FILE="${STATE_DIR}/getmail.state"
 SOURCE_COUNT_SCRIPT="/scripts/source_mailbox_count.py"
+GETMAIL_DIR="${STATE_DIR}/getmail"
 CYCLE_COUNT=0
+
+mkdir -p "$GETMAIL_DIR"
 
 log_event() {
   msg="$1"
@@ -115,7 +118,7 @@ while true; do
   # If it fails, we log and retry next cycle.
   # Messages remain on source if delivery failed; with delete=true, successful delivery removes from source.
   RUN_OUTPUT_FILE="$(mktemp)"
-  if getmail --rcfile "$RC_FILE" >"$RUN_OUTPUT_FILE" 2>&1; then
+  if getmail --getmaildir "$GETMAIL_DIR" --rcfile "$RC_FILE" >"$RUN_OUTPUT_FILE" 2>&1; then
     cat "$RUN_OUTPUT_FILE" >>"$GETMAIL_RUN_LOG"
     log_event "getmail run OK"
   else
