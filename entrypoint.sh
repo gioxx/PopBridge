@@ -123,7 +123,12 @@ while true; do
     if grep -Eiq 'no new messages|no messages \([0-9]+\)|no messages$' "$RUN_OUTPUT_FILE"; then
       log_event "getmail run OK (no new messages)"
     else
-      log_event "getmail run failed (will retry)"
+      FAILURE_SUMMARY="$(tail -n 5 "$RUN_OUTPUT_FILE" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g' | sed 's/ *$//')"
+      if [ -n "$FAILURE_SUMMARY" ]; then
+        log_event "getmail run failed (will retry): ${FAILURE_SUMMARY}"
+      else
+        log_event "getmail run failed (will retry)"
+      fi
     fi
   fi
   rm -f "$RUN_OUTPUT_FILE"
