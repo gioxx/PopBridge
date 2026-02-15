@@ -36,6 +36,7 @@ SRC_SSL="${SRC_SSL:-true}"
 SRC_STARTTLS="${SRC_STARTTLS:-false}"
 
 DST_SMTP_STARTTLS="${DST_SMTP_STARTTLS:-true}"
+EFFECTIVE_DST_RCPT_TO="${DST_RCPT_TO:-$DST_SMTP_USER}"
 
 mkdir -p "$STATE_DIR" "$LOG_DIR" /etc/forwarder
 
@@ -72,7 +73,7 @@ export RC_FILE SMTP_SENDER RETRIEVER_TYPE RETRIEVER_EXTRA DELETE_OPT
 export SRC_HOST SRC_PORT SRC_USER SRC_PASS STATE_DIR LOG_DIR
 /scripts/render_getmailrc.sh
 
-echo "Forwarder starting: source=${SRC_USER}, destination=${DST_SMTP_USER}"
+echo "Forwarder starting: source=${SRC_USER}, destination=${EFFECTIVE_DST_RCPT_TO}"
 echo "Transport: src_ssl=${SRC_SSL}, src_starttls=${SRC_STARTTLS}, dst_starttls=${DST_SMTP_STARTTLS}"
 echo "Polling every ${POLL_SECONDS}s; delete_after_delivery=${DELETE_AFTER_DELIVERY}; state_dir=${STATE_DIR}"
 
@@ -113,11 +114,19 @@ while true; do
   # Run one fetch cycle.
   # If it fails, we log and retry next cycle.
   # Messages remain on source if delivery failed; with delete=true, successful delivery removes from source.
-  if ! getmail --rcfile "$RC_FILE" >>"$GETMAIL_RUN_LOG" 2>&1; then
-    log_event "getmail run failed (will retry)"
-  else
+  RUN_OUTPUT_FILE="$(mktemp)"
+  if getmail --rcfile "$RC_FILE" >"$RUN_OUTPUT_FILE" 2>&1; then
+    cat "$RUN_OUTPUT_FILE" >>"$GETMAIL_RUN_LOG"
     log_event "getmail run OK"
+  else
+    cat "$RUN_OUTPUT_FILE" >>"$GETMAIL_RUN_LOG"
+    if grep -Eiq 'no new messages|no messages \([0-9]+\)|no messages$' "$RUN_OUTPUT_FILE"; then
+      log_event "getmail run OK (no new messages)"
+    else
+      log_event "getmail run failed (will retry)"
+    fi
   fi
+  rm -f "$RUN_OUTPUT_FILE"
 
   if [ "$BACKLOG_LOG_EVERY" -gt 0 ] && [ $((CYCLE_COUNT % BACKLOG_LOG_EVERY)) -eq 0 ]; then
     if SOURCE_COUNT="$("$SOURCE_COUNT_SCRIPT" 2>>"$RUNNER_LOG")"; then
