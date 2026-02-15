@@ -82,20 +82,26 @@ STATE_FILE="${STATE_DIR}/getmail.state"
 SOURCE_COUNT_SCRIPT="/scripts/source_mailbox_count.py"
 CYCLE_COUNT=0
 
-echo "$(date -Iseconds) startup: state_file=${STATE_FILE}" >> "$RUNNER_LOG"
+log_event() {
+  msg="$1"
+  ts="$(date -Iseconds)"
+  printf '%s %s\n' "$ts" "$msg" | tee -a "$RUNNER_LOG"
+}
+
+log_event "startup: state_file=${STATE_FILE}"
 if [ -f "$STATE_FILE" ]; then
-  echo "$(date -Iseconds) startup: existing state detected, bridge mode resumes from known UIDLs" >> "$RUNNER_LOG"
+  log_event "startup: existing state detected, bridge mode resumes from known UIDLs"
 else
-  echo "$(date -Iseconds) startup: no state file detected, initial run may migrate existing messages from source" >> "$RUNNER_LOG"
+  log_event "startup: no state file detected, initial run may migrate existing messages from source"
 fi
 
 if SOURCE_COUNT="$("$SOURCE_COUNT_SCRIPT" 2>>"$RUNNER_LOG")"; then
-  echo "$(date -Iseconds) startup: source mailbox currently reports ${SOURCE_COUNT} message(s)" >> "$RUNNER_LOG"
+  log_event "startup: source mailbox currently reports ${SOURCE_COUNT} message(s)"
   if [ ! -f "$STATE_FILE" ] && bool_is_true "$DELETE_AFTER_DELIVERY"; then
-    echo "$(date -Iseconds) startup: initial migration mode active (delete_after_delivery=true)" >> "$RUNNER_LOG"
+    log_event "startup: initial migration mode active (delete_after_delivery=true)"
   fi
 else
-  echo "$(date -Iseconds) startup: unable to estimate source message count (continuing)" >> "$RUNNER_LOG"
+  log_event "startup: unable to estimate source message count (continuing)"
 fi
 
 # -----------------------------
@@ -108,16 +114,16 @@ while true; do
   # If it fails, we log and retry next cycle.
   # Messages remain on source if delivery failed; with delete=true, successful delivery removes from source.
   if ! getmail --rcfile "$RC_FILE" >>"$GETMAIL_RUN_LOG" 2>&1; then
-    echo "$(date -Iseconds) getmail run failed (will retry)" >> "$RUNNER_LOG"
+    log_event "getmail run failed (will retry)"
   else
-    echo "$(date -Iseconds) getmail run OK" >> "$RUNNER_LOG"
+    log_event "getmail run OK"
   fi
 
   if [ "$BACKLOG_LOG_EVERY" -gt 0 ] && [ $((CYCLE_COUNT % BACKLOG_LOG_EVERY)) -eq 0 ]; then
     if SOURCE_COUNT="$("$SOURCE_COUNT_SCRIPT" 2>>"$RUNNER_LOG")"; then
-      echo "$(date -Iseconds) progress: cycle=${CYCLE_COUNT}, source mailbox reports ${SOURCE_COUNT} message(s)" >> "$RUNNER_LOG"
+      log_event "progress: cycle=${CYCLE_COUNT}, source mailbox reports ${SOURCE_COUNT} message(s)"
     else
-      echo "$(date -Iseconds) progress: cycle=${CYCLE_COUNT}, unable to estimate source message count" >> "$RUNNER_LOG"
+      log_event "progress: cycle=${CYCLE_COUNT}, unable to estimate source message count"
     fi
   fi
 
