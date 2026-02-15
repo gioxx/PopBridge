@@ -14,15 +14,15 @@ RUN adduser -D -H -u 10001 app \
 
 COPY entrypoint.sh /entrypoint.sh
 COPY scripts /scripts
-RUN chmod +x /entrypoint.sh /scripts/render_getmailrc.sh /scripts/smtp_send.py
+RUN chmod +x /entrypoint.sh /scripts/render_getmailrc.sh /scripts/smtp_send.py /scripts/source_mailbox_count.py
 
 USER app
 
 ENV STATE_DIR=/var/lib/forwarder \
     LOG_DIR=/var/log/forwarder \
     POLL_SECONDS=120 \
+    BACKLOG_LOG_EVERY=10 \
     DELETE_AFTER_DELIVERY=true \
-    SRC_PROTOCOL=pop3 \
     SRC_SSL=true \
     SRC_STARTTLS=false \
     DST_SMTP_STARTTLS=true

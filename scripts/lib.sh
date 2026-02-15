@@ -25,7 +25,3 @@ bool_is_true() {
   v="$(echo "${1:-}" | tr '[:upper:]' '[:lower:]')"
   [ "$v" = "true" ] || [ "$v" = "1" ] || [ "$v" = "yes" ]
 }
-
-lower() {
-  echo "${1:-}" | tr '[:upper:]' '[:lower:]'
-}

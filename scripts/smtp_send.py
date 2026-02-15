@@ -19,13 +19,16 @@ def main() -> int:
     port = int(env("DST_SMTP_PORT"))
     user = env("DST_SMTP_USER")
     password = env("DST_SMTP_PASS")
+    rcpt_to_raw = os.environ.get("DST_RCPT_TO") or user
 
     starttls = os.environ.get("DST_SMTP_STARTTLS", "true").lower() in ("true", "1", "yes")
 
     # Envelope sender/recipient:
-    # Keep a stable envelope sender (the Gmail account) to avoid rejections.
+    # Keep a stable envelope sender (SMTP auth identity) to avoid rejections.
     mail_from = user
-    rcpt_to = [user]  # Deliver into the target Gmail mailbox.
+    rcpt_to = [addr.strip() for addr in rcpt_to_raw.split(",") if addr.strip()]
+    if not rcpt_to:
+        raise RuntimeError("DST_RCPT_TO resolved to an empty recipient list")
 
     if starttls:
         with smtplib.SMTP(host, port, timeout=60) as client:

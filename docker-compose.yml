@@ -6,9 +6,7 @@ services:
     image: popbridge:latest
     container_name: popbridge-pop3
     restart: unless-stopped
-    profiles: ["pop3"]
     environment:
-      SRC_PROTOCOL: pop3
       SRC_HOST: ${SRC_HOST}
       SRC_PORT: ${SRC_PORT:-995}
       SRC_USER: ${SRC_USER}
@@ -19,6 +17,7 @@ services:
       DST_SMTP_PORT: ${DST_SMTP_PORT:-587}
       DST_SMTP_USER: ${DST_SMTP_USER}
       DST_SMTP_PASS: ${DST_SMTP_PASS}
+      DST_RCPT_TO: ${DST_RCPT_TO:-}
       DST_SMTP_STARTTLS: ${DST_SMTP_STARTTLS:-true}
       DELETE_AFTER_DELIVERY: ${DELETE_AFTER_DELIVERY:-true}
       POLL_SECONDS: ${POLL_SECONDS:-120}
@@ -26,35 +25,6 @@ services:
       - popbridge-pop3-state:/var/lib/forwarder
       - popbridge-pop3-logs:/var/log/forwarder
 
-  popbridge-imap:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: popbridge:latest
-    container_name: popbridge-imap
-    restart: unless-stopped
-    profiles: ["imap"]
-    environment:
-      SRC_PROTOCOL: imap
-      SRC_HOST: ${SRC_HOST}
-      SRC_PORT: ${SRC_PORT:-993}
-      SRC_USER: ${SRC_USER}
-      SRC_PASS: ${SRC_PASS}
-      SRC_SSL: ${SRC_SSL:-true}
-      SRC_STARTTLS: ${SRC_STARTTLS:-false}
-      DST_SMTP_HOST: ${DST_SMTP_HOST}
-      DST_SMTP_PORT: ${DST_SMTP_PORT:-587}
-      DST_SMTP_USER: ${DST_SMTP_USER}
-      DST_SMTP_PASS: ${DST_SMTP_PASS}
-      DST_SMTP_STARTTLS: ${DST_SMTP_STARTTLS:-true}
-      DELETE_AFTER_DELIVERY: ${DELETE_AFTER_DELIVERY:-true}
-      POLL_SECONDS: ${POLL_SECONDS:-120}
-    volumes:
-      - popbridge-imap-state:/var/lib/forwarder
-      - popbridge-imap-logs:/var/log/forwarder
-
 volumes:
   popbridge-pop3-state:
   popbridge-pop3-logs:
-  popbridge-imap-state:
-  popbridge-imap-logs:
