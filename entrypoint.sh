@@ -78,6 +78,8 @@ RC_FILE="/etc/forwarder/getmailrc"
 SMTP_SENDER="/scripts/smtp_send.py"
 
 # Build getmailrc for the current runtime configuration.
+export RC_FILE SMTP_SENDER RETRIEVER_TYPE RETRIEVER_EXTRA DELETE_OPT
+export SRC_HOST SRC_PORT SRC_USER SRC_PASS STATE_DIR LOG_DIR
 /scripts/render_getmailrc.sh
 
 echo "Forwarder starting: protocol=${SRC_PROTOCOL}, source=${SRC_USER}, destination=${DST_SMTP_USER}"

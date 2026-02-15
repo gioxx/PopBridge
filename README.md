@@ -52,12 +52,11 @@ docker build -t popbridge:latest .
 
 The repository includes:
 - `docker-compose.yml` with two ready-to-use profiles: `pop3` and `imap`
-- `sample.env` with all required variables and placeholders
 
-Compose maps profile-specific source variables to runtime canonical variables:
-- POP3 profile reads `SRC_POP3_*`
-- IMAP profile reads `SRC_IMAP_*`
-- destination remains `DST_SMTP_*`
+Both profiles use the same canonical variables:
+- source: `SRC_HOST`, `SRC_PORT`, `SRC_USER`, `SRC_PASS`, `SRC_SSL`, `SRC_STARTTLS`
+- destination: `DST_SMTP_HOST`, `DST_SMTP_PORT`, `DST_SMTP_USER`, `DST_SMTP_PASS`, `DST_SMTP_STARTTLS`
+- runtime: `DELETE_AFTER_DELIVERY`, `POLL_SECONDS`
 
 Run POP3 profile:
 
@@ -70,6 +69,9 @@ Run IMAP profile:
 ```bash
 docker compose --profile imap up -d --build
 ```
+
+Portainer note:
+- if profiles are not supported or not enabled in your deployment flow, remove `profiles: ["pop3"]` / `profiles: ["imap"]` from the selected service before deploying.
 
 Stop and remove:
 

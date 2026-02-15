@@ -7,16 +7,14 @@ services:
     container_name: popbridge-pop3
     restart: unless-stopped
     profiles: ["pop3"]
-    env_file:
-      - sample.env
     environment:
       SRC_PROTOCOL: pop3
-      SRC_HOST: ${SRC_POP3_HOST}
-      SRC_PORT: ${SRC_POP3_PORT:-995}
-      SRC_USER: ${SRC_POP3_USER}
-      SRC_PASS: ${SRC_POP3_PASS}
-      SRC_SSL: ${SRC_POP3_SSL:-true}
-      SRC_STARTTLS: ${SRC_POP3_STARTTLS:-false}
+      SRC_HOST: ${SRC_HOST}
+      SRC_PORT: ${SRC_PORT:-995}
+      SRC_USER: ${SRC_USER}
+      SRC_PASS: ${SRC_PASS}
+      SRC_SSL: ${SRC_SSL:-true}
+      SRC_STARTTLS: ${SRC_STARTTLS:-false}
       DST_SMTP_HOST: ${DST_SMTP_HOST}
       DST_SMTP_PORT: ${DST_SMTP_PORT:-587}
       DST_SMTP_USER: ${DST_SMTP_USER}
@@ -36,16 +34,14 @@ services:
     container_name: popbridge-imap
     restart: unless-stopped
     profiles: ["imap"]
-    env_file:
-      - sample.env
     environment:
       SRC_PROTOCOL: imap
-      SRC_HOST: ${SRC_IMAP_HOST}
-      SRC_PORT: ${SRC_IMAP_PORT:-993}
-      SRC_USER: ${SRC_IMAP_USER}
-      SRC_PASS: ${SRC_IMAP_PASS}
-      SRC_SSL: ${SRC_IMAP_SSL:-true}
-      SRC_STARTTLS: ${SRC_IMAP_STARTTLS:-false}
+      SRC_HOST: ${SRC_HOST}
+      SRC_PORT: ${SRC_PORT:-993}
+      SRC_USER: ${SRC_USER}
+      SRC_PASS: ${SRC_PASS}
+      SRC_SSL: ${SRC_SSL:-true}
+      SRC_STARTTLS: ${SRC_STARTTLS:-false}
       DST_SMTP_HOST: ${DST_SMTP_HOST}
       DST_SMTP_PORT: ${DST_SMTP_PORT:-587}
       DST_SMTP_USER: ${DST_SMTP_USER}
