@@ -31,6 +31,7 @@ def main() -> int:
     password = env("DST_SMTP_PASS")
     rcpt_to_raw = os.environ.get("DST_RCPT_TO") or user
     force_from = os.environ.get("DST_FORCE_FROM", "").strip()
+    force_to = os.environ.get("DST_FORCE_TO", "").strip()
 
     starttls = as_bool("DST_SMTP_STARTTLS", "true")
     tls_verify = as_bool("DST_SMTP_TLS_VERIFY", "true")
@@ -60,6 +61,21 @@ def main() -> int:
             msg["X-Original-From"] = original_from
             if "Reply-To" not in msg:
                 msg["Reply-To"] = original_from
+
+        out = BytesIO()
+        BytesGenerator(out, policy=default).flatten(msg)
+        payload = out.getvalue()
+
+    if force_to:
+        original_to = msg.get("To")
+
+        if "To" in msg:
+            msg.replace_header("To", force_to)
+        else:
+            msg["To"] = force_to
+
+        if original_to:
+            msg["X-Original-To"] = original_to
 
         out = BytesIO()
         BytesGenerator(out, policy=default).flatten(msg)

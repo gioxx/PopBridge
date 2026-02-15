@@ -27,6 +27,7 @@ ENV STATE_DIR=/var/lib/forwarder \
     SRC_STARTTLS=false \
     DST_SMTP_STARTTLS=true \
     DST_SMTP_TLS_VERIFY=true \
-    DST_FORCE_FROM=
+    DST_FORCE_FROM= \
+    DST_FORCE_TO=
 
 ENTRYPOINT ["/entrypoint.sh"]
