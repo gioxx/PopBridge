@@ -1,5 +1,8 @@
 # PopBridge
 
+> [!WARNING]  
+> Experimental project (testing phase): this bridge is still under active testing and does not yet behave reliably in every scenario. PRs, issue reports, and suggestions are very welcome.
+
 Minimal POP3-to-Gmail bridge container.
 
 Goal: when a message arrives in the old POP3 mailbox, the container forwards it to Gmail and, on successful delivery, deletes it from the source mailbox.
